@@ -7,12 +7,11 @@ consistency and motivation are key ingredients to success.  This mode
 is meant to help provide feedback on progress and, by showing current
 speed, perhaps even a little motivation.
 
-The main purpose of the mode is to provide a wordcount, words per
-minute, and an estimate of how long you will have to continue writing
-to meet the day's goal.
+This mode adds to the modeline a wordcount, words per minute, and an
+estimate of how long you will have to continue writing to meet the
+day's goal.
 
 Feedback and feature requests are welcome, as are pull requests.
-
 
 Installation
 ============
@@ -25,10 +24,12 @@ it included in MELPA.  In the meantime, download it, add it's path to
 Usage
 =====
 
-After installation simply type, M-x nanowrimo-mode RET and the current
-word count will appear in the modeline.  Moreover, the words per
-minute of the current session will also appear as well as an estimate
-of when you will meet today's goal, as set by `nanowrimo-today-goal`.
+After installation simply type, `M-x nanowrimo-mode RET` and the
+current word count will appear in the modeline.  Moreover, the words
+per minute of the current session will also appear as well as an
+estimate of when you will meet today's goal, as set by
+`nanowrimo-today-goal`.  When you are done writing simply turn it off
+with by typing `M-x nanowrimo-mode RET` again.
 
 If you wish to not show the current WPM or the estimate their display
 can be turned off, and a few other settings changed via customize:
@@ -38,9 +39,10 @@ can be turned off, and a few other settings changed via customize:
 If you wish to change the way words are counted please you can
 customize `nanowrimo-count-words-function`.  By default all words (as
 defined by `forward-word`) are counted unless you are in org mode
-*and* have org-wc.el installed.  In this case, only the current
-subtree is counted with the thought that you will create a subtree for
-each day.
+*and* have [org-wc](https://github.com/dato/org-wc) installed.  In
+this case, only the current subtree is counted with the thought that
+you will create a subtree for each day.  In addition, org-mode markup
+like drawers are ignored when counting words.
 
 
 Future Plans
