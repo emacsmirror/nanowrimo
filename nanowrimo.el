@@ -58,7 +58,21 @@
   :type 'integer
   :safe 'integerp)
 
-(defcustom nanowrimo-today-goal (/ nanowrimo-total-goal 30.0)
+(defcustom nanowrimo-start-date
+  (format-time-string "Nov 1 00:00:00 %Y")
+  "The date string for the first day of NaNoWriMo."
+  :group 'nanowrimo
+  :type 'string
+  :safe 'stringp)
+
+(defcustom nanowrimo-num-days 30
+  "How many days you would like to write for."
+  :group 'nanowrimo
+  :type 'integer
+  :safe 'integerp)
+
+(defcustom nanowrimo-today-goal
+  (ceiling nanowrimo-total-goal nanowrimo-num-days)
   "How many words there were at the beginning of the session."
   :group 'nanowrimo
   :type 'integer
@@ -74,6 +88,17 @@ count as small a portion of the buffer as possible since it will
 be called after every change."
   :group 'nanowrimo
   :type 'function)
+
+(defcustom nanowrimo-org-table-name "nanocalc"
+  "The date string for the first day of NaNoWriMo."
+  :group 'nanowrimo
+  :type 'string
+  :safe 'stringp)
+
+(defcustom nanowrimo-finish-functions nil
+  "Functions to call when `nanowrimo-mode' is turned off."
+  :group 'nanowrimo
+  :type '(repeat function))
 
 ;;}}}
 ;;{{{ Internal Variables
@@ -98,8 +123,17 @@ Used to compute WPM and estimates.")
   "How many words there were at the beginning of the session.")
 ;; (make-variable-buffer-local 'nanowrimo--start-wc)
 
+(defvar nanowrimo--org-table-skeleton
+  "#+NAME: %s
+#+CONSTANTS: base=250 target=1667 increment=4 logbase=100. tdlogbase=100. tclogbase=200.
+| <3> | <6>    | <5>   | <7>     | <7>     | <5>   | <6>    | <6>    | <7>     |
+| Day | Words  | Quota | Chain   | Cum Wds | Targ  | Cum T  | Plus/min | Score   |
+|-----+--------+-------+---------+---------+-------+--------+--------+---------|
+|   1 |        |       |         |         |       |        |        |         |
+#+TBLFM: e$3='(if (eq \"@-1$2\" \"\") \"\" (calcFunc-max $base (+ $base (* $increment @-1$4))));L::$4='(if (eq \"$2\" \"\") \"\" (if (>= $2 $base) (calcFunc-max 0. (+ 1. (+ (calcFunc-max 0. @-1$4) (string-to-number (calc-eval \"log(div($2,$3),$logbase)\"))) )) (if (> @-1$4 0) -1 (- @-1$4 1))));L::$5='(if (eq \"$2\" \"\") \"\" (+ $2 @-1$5));L::$6='(if (eq \"@-1$2\" \"\") \"\" $target);L::$7='(if (eq \"@-1$2\" \"\") \"\" (+ $target @-1$7));L::$8='(if (eq \"$2\" \"\") \"\" (- $5 $7));L::$9='(if (eq \"$2\" \"\") \"\" (if (> $4 0) (calcFunc-max 0 (+ (string-to-number (calc-eval \"log(div($5,$7),$tclogbase)\")) (string-to-number (calc-eval \"log(div($2,$6),$tdlogbase)\")) (calcFunc-max $4 1) @-1$9)) (calcFunc-max 0 (+ @-1$9 $4))));L::@3$3=$base;N::@3$4='(if (eq \"@3$2\" \"\") \"\" (if (>= @3$2 $base) (+ 1.0 (string-to-number (calc-eval \"log(div(@3$2, @3$3),$logbase)\"))) -1.));L::@3$5='(if (eq \"@3$2\" \"\") \"\" @3$2);L::@3$6=$target;N::@3$7=$target;N::@3$8='(if (eq \"@3$2\" \"\") \"\" (- @3$5 @3$7));L::@3$9='(if (eq \"@3$2\" \"\") \"\" (if (> @3$4 0) (calcFunc-max 0 (+ (string-to-number (calc-eval \"log(div(@3$5,@3$7),$tclogbase)\")) (string-to-number (calc-eval \"log(div(@3$2,@3$6),$tdlogbase)\") ) @3$4)) @3$4));L")
+
 ;;}}}
-;;{{{ Functions
+;;{{{ Basic Functions
 
 (defun nanowrimo-count-words-region (start end)
   "Count the number of words in the region."
@@ -167,6 +201,83 @@ added to `after-change-functions'."
         (nanowrimo-mode-update))
     (remove-from-list 'global-mode-string 'nanowrimo--display)
     (remove-hook 'after-change-functions 'nanowrimo-mode-update)))
+
+;;}}}
+;;{{{ Maintaining org table of score
+
+(defun nanowrimo-days-into-nanowrimo ()
+  "Returns how many days into NaNoWriMo today is."
+  (days-between (format-time-string "%c") nanowrimo-start-date))
+
+(defun nanowrimo-update-org-table (&optional novisit)
+  "Update the org-mode table calculating the score.
+Suitable for adding to `nanowrimo-finish-functions'."
+  (interactive "P")
+
+  (when (and (eq major-mode 'org-mode)
+             (require 'calc-ext nil t))
+   (let ((wc (nanowrimo-count-words))
+         (days (nanowrimo-days-into-nanowrimo))
+         (p nil))
+     (save-excursion
+       (if (< days 1)
+           (user-error "Today is not a NaNoWriMo day.")
+         (goto-char (point-min))
+         (re-search-forward
+          (org-babel-named-data-regexp-for-name nanowrimo-org-table-name))
+         (re-search-forward "^\\s *|")
+         (sit-for 1)
+         (nanowrimo-verify-org-table)
+         ;; This is a bit of a hack to find the right row
+         (re-search-backward (format "^\\s *| +%d |" days))
+         (setq p (point))
+         ;; Replace the field with our new
+         (org-table-get-field 1 (format "%s" wc))
+         (org-table-recalculate t nil)))
+     (when (and p (not novisit))
+       (goto-char p)))))
+
+(defun nanowrimo-insert-org-table ()
+  "Insert an org-mode table for keeping track of progress.
+If a table with a name of `nanowrimo-org-table-name' already exists
+then it is merely updated to contain the correct number of days."
+  (interactive)
+  (when (and (eq major-mode 'org-mode)
+             (require 'calc-ext nil t))
+    (let ((p (save-excursion
+               (goto-char (point-min))
+               (and (re-search-forward
+                     (org-babel-named-data-regexp-for-name nanowrimo-org-table-name) nil t)
+                    (re-search-forward "^\\s *|" nil t)
+                    (point)))))
+      (if p
+          (goto-char p)
+        (when (not (bolp)) (insert "\n"))
+        (insert (format nanowrimo--org-table-skeleton nanowrimo-org-table-name))
+        (re-search-backward "^|"))
+      (nanowrimo-verify-org-table))))
+
+(defun nanowrimo-verify-org-table ()
+  "Ensure that the org table has the right number of rows.
+
+Expects point to be in a table and ensures that the first column
+contains 1, 2, 3, ... up to `nanowrimo-num-days'."
+  (if (not (org-table-p))
+      (user-error "Not at a table")
+    (org-table-goto-line 1)
+    (while (not (string-match "^ *[0-9]+ *$" (org-table-get-field 1)))
+      (forward-line))
+    (let ((i 1))
+      (while (<= i nanowrimo-num-days)
+        (if (org-table-p)
+            (progn
+              (org-table-get-field 1 (format "%s" i))
+              (forward-line))
+          (beginning-of-line)
+          (insert (format "| %s\n" i)))
+        (setq i (1+ i))))
+    (forward-line -1)
+    (org-table-align)))
 
 ;;}}}
 
