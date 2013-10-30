@@ -29,7 +29,7 @@
 ;; yesterday etc.
 
 ;; TODO: Perhaps make `nanowrimo-mode' hook into auto-fill-mode?  Then
-;; it wouldn't be accurate after deletion...  But it might be faster
+;; it wouldn't be accurate after deletion...  But it might be faster.
 
 ;;; Code:
 
@@ -53,7 +53,7 @@
   :safe 'boolp)
 
 (defcustom nanowrimo-total-goal 50000
-  "How many words you would like to write today."
+  "How many words you would like to write in total."
   :group 'nanowrimo
   :type 'integer
   :safe 'integerp)
@@ -73,7 +73,7 @@
 
 (defcustom nanowrimo-today-goal
   (ceiling nanowrimo-total-goal nanowrimo-num-days)
-  "How many words there were at the beginning of the session."
+  "How many words you would like to write today."
   :group 'nanowrimo
   :type 'integer
   :safe 'integerp)
@@ -90,7 +90,7 @@ be called after every change."
   :type 'function)
 
 (defcustom nanowrimo-org-table-name "nanocalc"
-  "The date string for the first day of NaNoWriMo."
+  "Name of the table where goals are tracked."
   :group 'nanowrimo
   :type 'string
   :safe 'stringp)
