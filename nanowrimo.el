@@ -280,6 +280,36 @@ contains 1, 2, 3, ... up to `nanowrimo-num-days'."
     (org-table-align)))
 
 ;;}}}
+;;{{{ Redacted export
+
+(defun nanowrimo-redact-region (beg end)
+  "Convert all letters in the region to x and all numbers to 9.
+
+The result is then suitable for sending to the word count
+function of nanowrimo.org without fear that someone will
+intercept your masterpiece."
+  (interactive "r")
+  (save-excursion
+    (goto-char beg)
+    (while (re-search-forward "[[:alpha:]]" end t)
+      (replace-match "x"))
+    (goto-char beg)
+    (while (re-search-forward "[0-9]" end t)
+      (replace-match "9"))))
+
+;; This only works with org 8.0
+(when (and (require 'ox-ascii nil t)
+           (fboundp 'org-export-define-derived-backend))
+  (org-export-define-derived-backend
+      'redacted-ascii 'ascii
+    :menu-entry
+    '(?w "Redacted NaNoWriMo"
+         (lambda (a s v b)
+           (org-ascii-export-as-ascii a s v b '(:ascii-charset ascii))
+           (with-current-buffer "*Org ASCII Export*"
+             (nanowrimo-redact-region (point-min) (point-max)))))))
+
+;;}}}
 
 (provide 'nanowrimo)
 
