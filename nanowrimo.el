@@ -25,9 +25,6 @@
 ;; If you plan to use this with org-mode you should install the great
 ;; org-wc.el from
 
-;; TODO: make more complicated tracking of goals, what I have from
-;; yesterday etc.
-
 ;; TODO: Perhaps make `nanowrimo-mode' hook into auto-fill-mode?  Then
 ;; it wouldn't be accurate after deletion...  But it might be faster.
 
@@ -276,7 +273,7 @@ If REPLACE is non-nil, the column will be replaced with this.
 If VISIT is non-nil, point will be moved to the org table."
   (when (and (eq major-mode 'org-mode)
              (require 'calc-ext nil t))
-    (let ((days (- (nanowrimo-days-into-nanowrimo)))
+    (let ((days (nanowrimo-days-into-nanowrimo))
           (p nil)
           (res nil))
       (if (< days 1)
