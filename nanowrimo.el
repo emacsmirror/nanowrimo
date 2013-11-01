@@ -213,7 +213,7 @@ added to `after-change-functions'."
         (when nanowrimo-today-goal-calculation-function
           (funcall nanowrimo-today-goal-calculation-function))
         (nanowrimo-mode-update))
-    (remove-from-list 'global-mode-string 'nanowrimo--display)
+    (setq global-mode-string (delete 'nanowrimo--display global-mode-string))
     (remove-hook 'after-change-functions 'nanowrimo-mode-update)
     (run-hooks 'nanowrimo-finish-functions)))
 
