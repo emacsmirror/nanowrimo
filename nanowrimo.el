@@ -95,10 +95,25 @@ be called after every change."
   :type 'string
   :safe 'stringp)
 
+(defcustom nanowrimo-today-goal-calculation-function
+  nil
+  "How many words you would like to write today."
+  :group 'nanowrimo
+  :type '(choice (const :tag "No Calculation"
+                        nil)
+                 (const :tag "From Org Table"
+                        nanowrimo-today-goal-from-org-table)
+                 (const :tag "From Org Table Quota"
+                        nanowrimo-today-goal-from-org-table-quota)
+                 (function :tag "Other Function"))
+  :safe 'symbolp)
+
 (defcustom nanowrimo-finish-functions nil
   "Functions to call when `nanowrimo-mode' is turned off."
   :group 'nanowrimo
-  :type '(repeat function))
+  :type '(repeat (choice (const :tag "Update Org Table"
+                                nanowrimo-update-org-table)
+                         (function :tag "Other Function"))))
 
 ;;}}}
 ;;{{{ Internal Variables
@@ -198,9 +213,12 @@ added to `after-change-functions'."
         (add-to-list 'after-change-functions 'nanowrimo-mode-update)
         (setq nanowrimo--start-wc (nanowrimo-count-words))
         (setq nanowrimo--start-time (current-time))
+        (when nanowrimo-today-goal-calculation-function
+          (funcall nanowrimo-today-goal-calculation-function))
         (nanowrimo-mode-update))
     (remove-from-list 'global-mode-string 'nanowrimo--display)
-    (remove-hook 'after-change-functions 'nanowrimo-mode-update)))
+    (remove-hook 'after-change-functions 'nanowrimo-mode-update)
+    (run-hooks 'nanowrimo-finish-functions)))
 
 ;;}}}
 ;;{{{ Maintaining org table of score
@@ -208,34 +226,6 @@ added to `after-change-functions'."
 (defun nanowrimo-days-into-nanowrimo ()
   "Returns how many days into NaNoWriMo today is."
   (days-between (format-time-string "%c") nanowrimo-start-date))
-
-(defun nanowrimo-update-org-table (&optional novisit)
-  "Update the org-mode table calculating the score.
-Suitable for adding to `nanowrimo-finish-functions'."
-  (interactive "P")
-
-  (when (and (eq major-mode 'org-mode)
-             (require 'calc-ext nil t))
-   (let ((wc (nanowrimo-count-words))
-         (days (nanowrimo-days-into-nanowrimo))
-         (p nil))
-     (save-excursion
-       (if (< days 1)
-           (user-error "Today is not a NaNoWriMo day.")
-         (goto-char (point-min))
-         (re-search-forward
-          (org-babel-named-data-regexp-for-name nanowrimo-org-table-name))
-         (re-search-forward "^\\s *|")
-         (sit-for 1)
-         (nanowrimo-verify-org-table)
-         ;; This is a bit of a hack to find the right row
-         (re-search-backward (format "^\\s *| +%d |" days))
-         (setq p (point))
-         ;; Replace the field with our new
-         (org-table-get-field 1 (format "%s" wc))
-         (org-table-recalculate t nil)))
-     (when (and p (not novisit))
-       (goto-char p)))))
 
 (defun nanowrimo-insert-org-table ()
   "Insert an org-mode table for keeping track of progress.
@@ -278,6 +268,56 @@ contains 1, 2, 3, ... up to `nanowrimo-num-days'."
         (setq i (1+ i))))
     (forward-line -1)
     (org-table-align)))
+
+(defun nanowrimo-todays-org-table (column replace visit)
+  "Interact with today's row in the org table.
+COLUMN is the column number to interact with.
+If REPLACE is non-nil, the column will be replaced with this.
+If VISIT is non-nil, point will be moved to the org table."
+  (when (and (eq major-mode 'org-mode)
+             (require 'calc-ext nil t))
+    (let ((days (- (nanowrimo-days-into-nanowrimo)))
+          (p nil)
+          (res nil))
+      (if (< days 1)
+          (user-error "Today is not a NaNoWriMo day.")
+        (save-excursion
+          (goto-char (point-min))
+          (re-search-forward
+           (org-babel-named-data-regexp-for-name nanowrimo-org-table-name))
+          (re-search-forward "^\\s *|")
+          (nanowrimo-verify-org-table)
+          ;; This is a bit of a hack to find the right row
+          (re-search-backward (format "^\\s *| +%d |" days))
+          (setq p (point))
+          (when (not replace)
+            (org-table-recalculate t nil))
+          ;; Replace the column or extract it
+          (setq res (org-table-get-field column replace))
+          (when replace
+            (org-table-recalculate t nil)))
+        (when (and p visit)
+          (goto-char p)))
+      res)))
+
+(defun nanowrimo-update-org-table (&optional novisit)
+  "Update the org-mode table calculating the score.
+Suitable for adding to `nanowrimo-finish-functions'."
+  (interactive "P")
+  (let ((wc (nanowrimo-count-words)))
+    (nanowrimo-todays-org-table 2 (format "%s" wc) (not novisit))))
+
+(defun nanowrimo-today-goal-from-org-table ()
+  "Update today's goal from the org table."
+  (let ((g (nanowrimo-todays-org-table 6 nil nil)))
+    (when g (setq nanowrimo-today-goal
+                  (string-to-number g)))))
+
+(defun nanowrimo-today-goal-from-org-table-quota ()
+  "Update today's goal from the org table."
+  (let ((g (nanowrimo-todays-org-table 3 nil nil)))
+    (when g (setq nanowrimo-today-goal
+                  (string-to-number g)))))
 
 ;;}}}
 ;;{{{ Redacted export
