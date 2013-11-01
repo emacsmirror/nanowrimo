@@ -222,7 +222,7 @@ added to `after-change-functions'."
 
 (defun nanowrimo-days-into-nanowrimo ()
   "Returns how many days into NaNoWriMo today is."
-  (days-between (format-time-string "%c") nanowrimo-start-date))
+  (1+ (days-between (format-time-string "%c") nanowrimo-start-date)))
 
 (defun nanowrimo-insert-org-table ()
   "Insert an org-mode table for keeping track of progress.
