@@ -201,6 +201,7 @@ added to `after-change-functions'."
                              (< estimate 600))
                     (format " %dmin" estimate))))))
 
+;;;###autoload
 (define-minor-mode nanowrimo-mode
   "Display the number of words, WPM and estimate to finish in the mode line."
   nil "" '()
@@ -224,6 +225,7 @@ added to `after-change-functions'."
   "Returns how many days into NaNoWriMo today is."
   (1+ (days-between (format-time-string "%c") nanowrimo-start-date)))
 
+;;;###autoload
 (defun nanowrimo-insert-org-table ()
   "Insert an org-mode table for keeping track of progress.
 If a table with a name of `nanowrimo-org-table-name' already exists
@@ -319,6 +321,7 @@ Suitable for adding to `nanowrimo-finish-functions'."
 ;;}}}
 ;;{{{ Redacted export
 
+;;;###autoload
 (defun nanowrimo-redact-region (beg end)
   "Convert all letters in the region to x and all numbers to 9.
 
