@@ -280,23 +280,28 @@ If VISIT is non-nil, point will be moved to the org table."
           (res nil))
       (if (< days 1)
           (user-error "Today is not a NaNoWriMo day.")
-        (save-excursion
-          (goto-char (point-min))
-          (re-search-forward
-           (org-babel-named-data-regexp-for-name nanowrimo-org-table-name))
-          (re-search-forward "^\\s *|")
-          (nanowrimo-verify-org-table)
-          ;; This is a bit of a hack to find the right row
-          (re-search-backward (format "^\\s *| +%d |" days))
-          (setq p (point))
-          (when (not replace)
-            (org-table-recalculate t nil))
-          ;; Replace the column or extract it
-          (setq res (org-table-get-field column replace))
-          (when replace
-            (org-table-recalculate t nil)))
+        (save-restriction
+          (widen)
+          (save-excursion
+            (goto-char (point-min))
+            (re-search-forward
+             (org-babel-named-data-regexp-for-name nanowrimo-org-table-name))
+            (re-search-forward "^\\s *|")
+            (nanowrimo-verify-org-table)
+            ;; This is a bit of a hack to find the right row
+            (re-search-backward (format "^\\s *| +%d |" days))
+            (setq p (point))
+            (when (not replace)
+              (org-table-recalculate t nil))
+            ;; Replace the column or extract it
+            (setq res (org-table-get-field column replace))
+            (when replace
+              (org-table-recalculate t nil))))
         (when (and p visit)
-          (goto-char p)))
+          (goto-char p)
+          (when (not (equal p (point)))
+            (widen)
+            (goto-char p))))
       res)))
 
 (defun nanowrimo-update-org-table (&optional novisit)
