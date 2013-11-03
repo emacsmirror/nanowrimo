@@ -17,9 +17,8 @@ Installation
 ============
 
 Installation is easiest performed via
-[MELPA](http://melpa.milkbox.net).  Or at least it will be once I get
-it included in MELPA.  In the meantime, download it, add it's path to
-`load-path` and `(require 'nanowrimo)`.
+[MELPA](http://melpa.milkbox.net).  You can also download it, add it's
+path to `load-path` and `(require 'nanowrimo)`.
 
 Usage
 =====
@@ -44,9 +43,15 @@ this case, only the current subtree is counted with the thought that
 you will create a subtree for each day.  In addition, org-mode markup
 like drawers are ignored when counting words.
 
+With org-mode
+-------------
 
-Future Plans
-============
+If you use org-mode, you can run `M-x nanowrimo-insert-org-table RET`
+to insert a table which will track progress throughout nanowrimo and
+give you a score.  The table is from Bob Newell, and can be used to
+set `nanowrimo-today-goal` automatically.  Simply customize
+`nanowrimo-today-goal-calculation-function`.
 
-I would like to add more sophisticated goal setting, as well as
-tracking of longer term progress.
+There is also a redacted export which can be used to create an
+anonymous version of your novel for submitting to the word count
+fairies.
