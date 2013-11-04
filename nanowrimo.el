@@ -207,7 +207,8 @@ added to `after-change-functions'."
   nil "" '()
   (if nanowrimo-mode
       (progn
-        (add-to-list 'global-mode-string 'nanowrimo--display)
+        (or global-mode-string (setq global-mode-string '("")))
+        (add-to-list 'global-mode-string 'nanowrimo--display t)
         (add-to-list 'after-change-functions 'nanowrimo-mode-update)
         (setq nanowrimo--start-wc (nanowrimo-count-words))
         (setq nanowrimo--start-time (current-time))
