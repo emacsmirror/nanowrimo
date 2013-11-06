@@ -40,14 +40,14 @@
 (defcustom nanowrimo-show-wpm t
   "If non-nil, show words per minute in the mode line."
   :group 'nanowrimo
-  :type 'bool
-  :safe 'boolp)
+  :type 'boolean
+  :safe 'booleanp)
 
 (defcustom nanowrimo-show-estimate t
   "If non-nil, show an estimate of how long it will take to finish today's goal."
   :group 'nanowrimo
-  :type 'bool
-  :safe 'boolp)
+  :type 'boolean
+  :safe 'booleanp)
 
 (defcustom nanowrimo-total-goal 50000
   "How many words you would like to write in total."
