@@ -171,14 +171,15 @@ If `nanowrimo-count-words-function' is set, call that, otherwise
 call `org-word-count-aux' on the current subtree, if it's
 available and the buffer is in `org-mode'.  It falls back to
 simply counting words in the entire buffer."
-  (cond
-   ((functionp nanowrimo-count-words-function)
-    (funcall nanowrimo-count-words-function))
-   ((and (eq major-mode 'org-mode)
-         (require 'org-wc nil t))
-    (nanowrimo-org-count-subtree))
-   (t
-    (nanowrimo-count-words-region (point-min) (point-max)))))
+  (save-match-data
+    (cond
+     ((functionp nanowrimo-count-words-function)
+      (funcall nanowrimo-count-words-function))
+     ((and (eq major-mode 'org-mode)
+           (require 'org-wc nil t))
+      (nanowrimo-org-count-subtree))
+     (t
+      (nanowrimo-count-words-region (point-min) (point-max))))))
 
 (defun nanowrimo-mode-update (&optional first last len)
   "Update the word count in the mode line.
