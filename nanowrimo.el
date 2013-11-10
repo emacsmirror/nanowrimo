@@ -344,16 +344,22 @@ intercept your masterpiece."
     (while (re-search-forward "[0-9]" end t)
       (replace-match "9"))))
 
+(defun nanowrimo-ignore-empty-org-section (headline contents info)
+  (when (org-string-nw-p contents)
+    (org-export-with-backend 'ascii headline contents info)))
+
 ;; This only works with org 8.0
 (when (and (require 'ox-ascii nil t)
            (fboundp 'org-export-define-derived-backend))
   (org-export-define-derived-backend
       'redacted-ascii 'ascii
+    :translate-alist '((headline . nanowrimo-ignore-empty-org-section))
     :menu-entry
     '(?w "Redacted NaNoWriMo"
          (lambda (a s v b)
-           (org-ascii-export-as-ascii a s v b '(:ascii-charset ascii))
-           (with-current-buffer "*Org ASCII Export*"
+           (org-export-to-buffer 'redacted-ascii "*NaNoWriMo Redacted Export*"
+             a s v b '(:ascii-charset ascii) (lambda () (text-mode)))
+           (with-current-buffer "*NaNoWriMo Redacted Export*"
              (nanowrimo-redact-region (point-min) (point-max)))))))
 
 ;;}}}
