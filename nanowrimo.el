@@ -311,6 +311,7 @@ If VISIT is non-nil, point will be moved to the org table."
              (org-babel-named-data-regexp-for-name nanowrimo-org-table-name))
             (re-search-forward "^\\s *|")
             (nanowrimo-verify-org-table)
+            (forward-line 1)
             ;; This is a bit of a hack to find the right row
             (re-search-backward (format "^\\s *| +%d |" days))
             (setq p (point))
