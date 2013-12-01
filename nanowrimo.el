@@ -21,14 +21,17 @@
 ;; URL: https://bitbucket.org/gvol/nanowrimo-mode
 
 ;;; Commentary:
-;;
+
+;; Adds to the modeline a wordcount, words per minute, and an estimate
+;; of how long you will have to continue writing to meet the day's goal.
+
 ;; If you plan to use this with org-mode you should install the great
-;; org-wc.el from
+;; org-wc.el from https://github.com/dato/org-wc
+
+;;; Code:
 
 ;; TODO: Perhaps make `nanowrimo-mode' hook into auto-fill-mode?  Then
 ;; it wouldn't be accurate after deletion...  But it might be faster.
-
-;;; Code:
 
 ;;{{{ Customizable variables
 
@@ -233,7 +236,8 @@ added to `after-change-functions'."
                                      t #'nanowrimo-show-stuck-suggestion)))
         (nanowrimo-mode-update))
     (setq global-mode-string (delete 'nanowrimo--display global-mode-string))
-    (setq nanowrimo-suggestions-timer (cancel-timer nanowrimo-suggestions-timer))
+    (setq nanowrimo-suggestions-timer (and (timerp nanowrimo-suggestions-timer)
+                                           (cancel-timer nanowrimo-suggestions-timer)))
     (remove-hook 'after-change-functions 'nanowrimo-mode-update)
     (run-hooks 'nanowrimo-finish-functions)))
 
