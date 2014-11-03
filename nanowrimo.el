@@ -126,6 +126,22 @@ be called after every change."
   :type 'numberp
   :group 'achievements)
 
+(defcustom nanowrimo-username ""
+  "Username for nanowrimo.org."
+  :group 'nanowrimo
+  :type 'string
+  :link '(url-link "http://nanowrimo.org/")
+  :safe 'stringp)
+
+(defcustom nanowrimo-api-key nil
+  "Key used for updating word count on nanowrimo.org.
+Found at http://nanowrimo.org/api/wordcount (must be logged in)."
+  :group 'nanowrimo
+  :type '(choice (const :tag "Prompt" nil)
+                 (string :tag "Secret key" ""))
+  :link '(url-link "http://nanowrimo.org/api/wordcount")
+  :safe 'stringp)
+
 ;;}}}
 ;;{{{ Internal Variables
 
@@ -346,6 +362,48 @@ Suitable for adding to `nanowrimo-finish-functions'."
   (let ((g (nanowrimo-todays-org-table 3 nil nil)))
     (when g (setq nanowrimo-today-goal
                   (string-to-number g)))))
+
+;;}}}
+;;{{{ Updating nanowrimo.org
+
+;;;###autoload
+(defun nanowrimo-update-nanowrimo-org (wc)
+  "Send the current word count to nanowrimo.org.
+If WC is non-nil, use the numeric value as the word count.
+Otherwise, send the value returned by `nanowrimo-count-words'.
+If the variables `nanowrimo-username' or `nanowrimo-api-key' are
+nil, the user will be prompted for values to be used (but not
+stored)."
+  (interactive "P")
+  (let* ((wordcount (if wc (prefix-numeric-value wc)
+                      (nanowrimo-count-words)))
+         (go-ahead (y-or-n-p (format
+                              "Update nanowrimo.org with a word count of %s"
+                              wordcount)))
+         (name (or nanowrimo-username
+                   (not go-ahead)
+                   (completing-read "nanowrimo.org username: " nil)))
+         (api-key (or nanowrimo-api-key
+                      (not go-ahead)
+                      (completing-read "API key: " nil)))
+         (hashable (format "%s%s%s" api-key name wordcount))
+         (hash (sha1 hashable))
+         ;; URL request variables
+         (url-request-method "PUT")
+         (url-request-extra-headers
+          '(("Content-Type" . "application/x-www-form-urlencoded")))
+         (url-request-data (format
+                            "hash=%s&name=%s&wordcount=%s"
+                            (url-hexify-string hash)
+                            (url-hexify-string name)
+                            wordcount)))
+    (when go-ahead
+      (url-retrieve
+       "http://nanowrimo.org/api/wordcount"
+       (lambda (status)
+         (if status
+             (switch-to-buffer (current-buffer))
+           (message "Wordcount successfully updated.")))))))
 
 ;;}}}
 ;;{{{ Redacted export
