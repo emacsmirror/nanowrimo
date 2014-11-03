@@ -260,7 +260,7 @@ instead of calling `nanowrimo-today-goal-calculation-function'."
     (setq global-mode-string (delete 'nanowrimo--display global-mode-string))
     (setq nanowrimo-suggestions-timer (and (timerp nanowrimo-suggestions-timer)
                                            (cancel-timer nanowrimo-suggestions-timer)))
-    (remove-hook 'after-change-functions 'nanowrimo-mode-update)
+    (remove-hook 'after-change-functions 'nanowrimo-mode-update t)
     (run-hooks 'nanowrimo-finish-functions)))
 
 ;;}}}
