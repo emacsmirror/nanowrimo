@@ -234,7 +234,10 @@ added to `after-change-functions'."
 
 ;;;###autoload
 (define-minor-mode nanowrimo-mode
-  "Display the number of words, WPM and estimate to finish in the mode line."
+  "Display the number of words, WPM and estimate to finish in the mode line.
+
+When called with prefix-argument, set today's goal to that value
+instead of calling `nanowrimo-today-goal-calculation-function'."
   nil "" '()
   (if nanowrimo-mode
       (progn
@@ -243,8 +246,11 @@ added to `after-change-functions'."
         (add-to-list 'after-change-functions 'nanowrimo-mode-update)
         (setq nanowrimo--start-wc (nanowrimo-count-words))
         (setq nanowrimo--start-time (current-time))
-        (when nanowrimo-today-goal-calculation-function
-          (funcall nanowrimo-today-goal-calculation-function))
+        (cond
+         (current-prefix-arg
+          (setq nanowrimo-today-goal (prefix-numeric-value current-prefix-arg)))
+         (nanowrimo-today-goal-calculation-function
+          (funcall nanowrimo-today-goal-calculation-function)))
         (when (and nanowrimo-show-suggestions
                    (not nanowrimo-suggestions-timer))
           (setq nanowrimo-suggestions-timer
