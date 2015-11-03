@@ -353,6 +353,7 @@ If VISIT is non-nil, point will be moved to the org table."
             (goto-char p))))
       res)))
 
+;;;###autoload
 (defun nanowrimo-update-org-table (&optional novisit)
   "Update the org-mode table calculating the score.
 Suitable for adding to `nanowrimo-finish-functions'."
