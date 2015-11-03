@@ -165,6 +165,9 @@ Used to compute WPM and estimates.")
   "How many words there were at the beginning of the session.")
 ;; (make-variable-buffer-local 'nanowrimo--start-wc)
 
+(defvar nanowrimo-suggestions-timer nil
+  "Holds the idle timer.")
+
 (defvar nanowrimo--org-table-skeleton
   "#+NAME: %s
 #+CONSTANTS: base=250 target=1667 increment=4 logbase=100. tdlogbase=100. tclogbase=200.
@@ -658,9 +661,6 @@ By Brian Eno and Peter Schmidt.
 
 Although originally intended for musicians and other artists,
 they can be useful for creative writers as well.")
-
-(defvar nanowrimo-suggestions-timer nil
-  "Holds the idle timer.")
 
 (defun nanowrimo-show-stuck-suggestion ()
   "Show a cryptic message intended to spark your imagination.
