@@ -268,7 +268,7 @@ instead of calling `nanowrimo-today-goal-calculation-function'."
 
 (defun nanowrimo-days-into-nanowrimo ()
   "Returns how many days into NaNoWriMo today is."
-  (1+ (days-between (format-time-string "%c") nanowrimo-start-date)))
+  (1+ (days-between (format-time-string "%FT%T%z") nanowrimo-start-date)))
 
 ;;;###autoload
 (defun nanowrimo-insert-org-table ()
