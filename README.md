@@ -1,5 +1,6 @@
 Nanowrimo mode
 ==============
+[![MELPA](http://melpa.org/packages/nanowrimo-badge.svg)](http://melpa.org/#/nanowrimo)
 
 It the month of November countless people write 50,000 words as a part
 of [Nanowrimo](http://www.nanowrimo.org).  It's no surprise that
