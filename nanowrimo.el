@@ -198,6 +198,11 @@ This require the org-wc package."
                       (save-excursion (or (outline-next-heading)
                                           (point-max)))))
 
+(defun nanowrimo-org-count-document ()
+  "Count words in the current subtree.
+This require the org-wc package."
+  (org-word-count-aux (point-min) (point-max)))
+
 (defun nanowrimo-count-words ()
   "Count the words in the current buffer (or relevant portion).
 If `nanowrimo-count-words-function' is set, call that, otherwise
@@ -210,7 +215,7 @@ simply counting words in the entire buffer."
       (funcall nanowrimo-count-words-function))
      ((and (eq major-mode 'org-mode)
            (require 'org-wc nil t))
-      (nanowrimo-org-count-subtree))
+      (nanowrimo-org-count-document))
      (t
       (nanowrimo-count-words-region (point-min) (point-max))))))
 
